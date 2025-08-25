@@ -1,0 +1,75 @@
+name: Laravel CICD
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  laravel-CI:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:5.7
+        env:
+          MYSQL_ROOT_PASSWORD: Hello123456#
+          MYSQL_DATABASE: ai
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+
+      - name: Install Dependencies
+        run: composer install --no-progress --no-suggest
+
+      - name: Create .env file
+        run: |
+          cp .env.example .env
+          # Update .env database credentials to match MySQL service
+          sed -i 's/DB_HOST=.*/DB_HOST=127.0.0.1/' .env
+          sed -i 's/DB_PORT=.*/DB_PORT=3306/' .env
+          sed -i 's/DB_DATABASE=.*/DB_DATABASE=ai/' .env
+          sed -i 's/DB_USERNAME=.*/DB_USERNAME=aiuser/' .env
+          sed -i 's/DB_PASSWORD=.*/DB_PASSWORD=Hello123456#/' .env
+
+      - name: Generate application key
+        run: php artisan key:generate
+
+      - name: Run database migrations
+        run: php artisan migrate --force
+
+  deploy:
+    name: Deploy via SSH
+    runs-on: ubuntu-latest
+    needs: laravel-CI
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Deploy to Server
+        uses: appleboy/ssh-action@master
+
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSHKEY }}
+          port: ${{ secrets.PORT }}
+
+          script: |
+            cd /var/www/ai-laravel-bot
+            git pull origin main
+            php artisan migrate --force
+            php artisan config:cache
