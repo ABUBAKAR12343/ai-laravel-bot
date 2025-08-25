@@ -38,10 +38,10 @@
 </head>
 <body>
     <div class="chat-container">
-        <h3 class="text-center mb-4">💬 Chat with HRMS Assistant</h3>
+        <h3 class="text-center mb-4">💬 Chat with HRMS Assistants</h3>
 
         <div id="chat-box" class="chat-box">
-            
+
         </div>
 
         <div class="input-group">
