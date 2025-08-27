@@ -28,7 +28,7 @@ class imageRecognizerController extends Controller
         $imageData = base64_encode(file_get_contents($fullPath));
 
         // Send image to OpenAI
-        $response =  Http::withToken(env('OPEN_AI_KEY'))>post('https://api.openai.com/v1/chat/completions', [
+        $response =  Http::withToken(env('OPEN_AI_KEY'))->post('https://api.openai.com/v1/chat/completions', [
             'model' => 'gpt-4o',
             'messages' => [
                 [
